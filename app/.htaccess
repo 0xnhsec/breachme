@@ -1,0 +1,20 @@
+# breachme — Apache .htaccess
+# Error page routing
+
+ErrorDocument 404 /public/errors/404.php
+ErrorDocument 403 /public/errors/403.php
+ErrorDocument 500 /public/errors/500.php
+ErrorDocument 503 /public/errors/503.php
+
+# Enable URL rewriting
+Options -Indexes
+RewriteEngine On
+
+# Block direct access to sensitive dirs
+RewriteRule ^config/ - [F,L]
+RewriteRule ^includes/ - [F,L]
+
+# Allow .htaccess overrides (set in Dockerfile)
+<IfModule mod_rewrite.c>
+    RewriteBase /
+</IfModule>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Clickjacking Demo - nhsec</title>
+    <style>
+        * { font-family: 'Inter', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a1a; color: #e2e8f0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .demo-container {
+            max-width: 800px; width: 90%; text-align: center;
+        }
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: #ef4444; }
+        p { color: #94a3b8; margin-bottom: 2rem; }
+        
+        .frame-wrapper {
+            position: relative; width: 100%; height: 600px;
+            border: 2px solid rgba(239,68,68,0.3); border-radius: 16px;
+            overflow: hidden; background: #1a1a2e;
+        }
+        
+        /* The transparent overlay that tricks the user */
+        .overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 10; display: flex; align-items: center; justify-content: center;
+            flex-direction: column; background: rgba(0,0,0,0.7);
+        }
+        .overlay h2 { font-size: 1.5rem; color: #06d6a0; margin-bottom: 1rem; }
+        .overlay .fake-btn {
+            background: linear-gradient(135deg, #06d6a0, #059669);
+            color: white; border: none; padding: 15px 40px;
+            border-radius: 12px; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; pointer-events: none;
+        }
+        .overlay .hint {
+            margin-top: 1rem; color: #ef4444; font-size: 0.85rem;
+            background: rgba(239,68,68,0.1); padding: 8px 16px; border-radius: 8px;
+        }
+        
+        /* The hidden iframe underneath */
+        iframe {
+            width: 100%; height: 100%; border: none;
+            opacity: 0.3; /* partially visible for demo */
+        }
+        
+        .controls {
+            margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;
+        }
+        .controls button {
+            padding: 10px 20px; border-radius: 10px; font-weight: 600;
+            cursor: pointer; border: none; font-size: 0.9rem;
+        }
+        .btn-show { background: #8b5cf6; color: white; }
+        .btn-hide { background: #ef4444; color: white; }
+        .btn-back { background: transparent; color: #94a3b8; border: 1px solid #333 !important; }
+        
+        .explanation {
+            margin-top: 2rem; text-align: left;
+            background: #12121f; border: 1px solid rgba(139,92,246,0.2);
+            border-radius: 12px; padding: 1.5rem;
+        }
+        .explanation h3 { color: #8b5cf6; margin-bottom: 0.75rem; }
+        .explanation code { background: #1a1a2e; padding: 2px 6px; border-radius: 4px; color: #06d6a0; }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1><i>⚠️</i> Clickjacking Demo</h1>
+        <p>Halaman checkout nhsec tidak memiliki header <code>X-Frame-Options</code>, sehingga bisa di-embed dalam iframe.</p>
+        
+        <div class="frame-wrapper">
+            <div class="overlay" id="overlay">
+                <h2>🎉 Selamat! Kamu Menang Hadiah!</h2>
+                <button class="fake-btn">Klaim Hadiah Gratis →</button>
+                <div class="hint">
+                    <i>🐛</i> Tombol ini sebenarnya mengarah ke tombol "Buat Pesanan" di halaman checkout di bawahnya!
+                </div>
+            </div>
+            <!-- [VULN: CLICKJACKING] - checkout page embedded in iframe intentional -->
+            <iframe src="/public/checkout.php" id="target-frame"></iframe>
+        </div>
+        
+        <div class="controls">
+            <button class="btn-show" onclick="toggleOverlay()">Toggle Overlay</button>
+            <button class="btn-hide" onclick="toggleOpacity()">Toggle Iframe Opacity</button>
+            <button class="btn-back" onclick="window.location.href='/public/index.php'">← Kembali ke nhsec</button>
+        </div>
+        
+        <div class="explanation">
+            <h3>📖 Penjelasan</h3>
+            <p style="color: #94a3b8; line-height: 1.8;">
+                <strong>Clickjacking</strong> adalah serangan di mana halaman korban di-embed dalam <code>&lt;iframe&gt;</code> 
+                yang transparan/semi-transparan, lalu ditumpangi dengan konten palsu yang menarik. Ketika user mengklik tombol 
+                yang terlihat (misal "Klaim Hadiah"), sebenarnya mereka mengklik tombol di halaman korban (misal "Buat Pesanan").
+            </p>
+            <p style="color: #94a3b8; line-height: 1.8; margin-top: 0.75rem;">
+                <strong>Fix:</strong> Tambahkan header <code>X-Frame-Options: DENY</code> atau 
+                <code>Content-Security-Policy: frame-ancestors 'none'</code> pada response halaman checkout.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        let overlayVisible = true;
+        let iframeOpaque = false;
+        
+        function toggleOverlay() {
+            overlayVisible = !overlayVisible;
+            document.getElementById('overlay').style.display = overlayVisible ? 'flex' : 'none';
+        }
+        
+        function toggleOpacity() {
+            iframeOpaque = !iframeOpaque;
+            document.getElementById('target-frame').style.opacity = iframeOpaque ? '1' : '0.3';
+        }
+    </script>
+</body>
+</html>

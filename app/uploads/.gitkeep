@@ -1,0 +1,2 @@
+# Intentionally empty - upload directory
+# [VULN: MISCONFIGURED] - This directory has 777 permissions intentional

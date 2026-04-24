@@ -1,0 +1,65 @@
+services:
+  web:
+    build: .
+    container_name: nhsec-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./app:/var/www/html
+      - ./siem:/var/www/html/siem
+    environment:
+      DB_HOST: db
+      DB_USER: nhsec
+      DB_PASS: nhsec_pass
+      DB_NAME: nhsec
+      APP_MODE: vulnerable
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - nhsec-net
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: nhsec-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: nhsec
+      MYSQL_USER: nhsec
+      MYSQL_PASSWORD: nhsec_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - nhsec-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - nhsec-net
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: nhsec-pma
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: nhsec
+      PMA_PASSWORD: nhsec_pass
+    depends_on:
+      - db
+    networks:
+      - nhsec-net
+    restart: unless-stopped
+
+volumes:
+  nhsec-data:
+
+networks:
+  nhsec-net:
+    driver: bridge
