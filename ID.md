@@ -6,10 +6,6 @@
 
 ![PHP](https://img.shields.io/badge/PHP-8.1-blue) ![MySQL](https://img.shields.io/badge/MySQL-8.0-orange) ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple) ![Docker](https://img.shields.io/badge/Docker-Ready-green)
 
-## ⚠️ Disclaimer
-
-> **JANGAN deploy di server publik!** Aplikasi ini mengandung kerentanan keamanan yang disengaja untuk tujuan edukasi. Gunakan hanya di lingkungan lokal/lab.
-
 ---
 
 ## 🚀 Quick Start
